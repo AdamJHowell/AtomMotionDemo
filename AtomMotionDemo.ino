@@ -44,7 +44,6 @@ Pausing for 5 seconds.
 #include <Adafruit_ADS1X15.h>
 
 
-
 #define PORT_B 23
 #define PORT_C 22
 
@@ -55,6 +54,8 @@ xSemaphoreHandle CtlSemaphore;
 bool direction = true;
 unsigned int speed = 180;
 unsigned int FSM = 0;
+const byte sdaGPIO = 26; // Use this to set the SDA GPIO if your board uses a non-standard GPIOs for the I2C bus.
+const byte sclGPIO = 32; // Use this to set the SCL GPIO if your board uses a non-standard GPIOs for the I2C bus.
 
 
 void GetStatus()
@@ -99,41 +100,57 @@ void setup()
 	M5.begin( true, false, true );
 	Atom.Init();
 	vSemaphoreCreateBinary( CtlSemaphore );
-	// xTaskCreatePinnedToCore(
-	//   // A name just for task.
-	//   TaskMotion, "TaskMotion"
-	//   // This stack size can be checked & adjusted by reading the Stack Highwater.
-	//   , 4096
-	//   // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-	//   , NULL, 2
-	//   // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-	//   , NULL, 0 );
+	xTaskCreatePinnedToCore(
+		 TaskMotion,	// Pointer to the task entry function.
+		 "TaskMotion", // A descriptive name for the task.
+		 4096,			// The size of the task stack specified as the number of bytes.
+		 NULL,			// Pointer that will be used as the parameter for the task being created.
+		 2,				// Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+		 NULL,			// Used to pass back a handle by which the created task can be referenced.
+		 0 );				// Values 0 or 1 indicate the index number of the CPU which the task should be pinned to.
 	pinMode( PORT_B, INPUT_PULLUP );
 	pinMode( PORT_C, INPUT_PULLUP );
 	M5.dis.drawpix( 0, 0xffffff ); // White
+
+	Wire.begin( sdaGPIO, sclGPIO );
+
+	if( !ads.begin() )
+	{
+		Serial.println( "Failed to initialize ADS." );
+		while( 1 )
+			delay( 10 );
+	}
 }
 
 
 void loop()
 {
-	int16_t adc0, adc1, adc2, adc3;
-	float volts0, volts1, volts2, volts3;
+	int16_t adc0 = ads.readADC_SingleEnded( 0 );
+	int16_t adc1 = ads.readADC_SingleEnded( 1 );
+	int16_t adc2 = ads.readADC_SingleEnded( 2 );
+	int16_t adc3 = ads.readADC_SingleEnded( 3 );
+	float volts0 = ads.computeVolts( adc0 );
+	float volts1 = ads.computeVolts( adc1 );
+	float volts2 = ads.computeVolts( adc2 );
+	float volts3 = ads.computeVolts( adc3 );
 
-	adc0 = ads.readADC_SingleEnded(0);
-	adc1 = ads.readADC_SingleEnded(1);
-	adc2 = ads.readADC_SingleEnded(2);
-	adc3 = ads.readADC_SingleEnded(3);
-
-	volts0 = ads.computeVolts(adc0);
-	volts1 = ads.computeVolts(adc1);
-	volts2 = ads.computeVolts(adc2);
-	volts3 = ads.computeVolts(adc3);
-
-	Serial.println("-----------------------------------------------------------");
-	Serial.print("AIN0: "); Serial.print(adc0); Serial.print("  "); Serial.print(volts0); Serial.println("V");
-	Serial.print("AIN1: "); Serial.print(adc1); Serial.print("  "); Serial.print(volts1); Serial.println("V");
-	Serial.print("AIN2: "); Serial.print(adc2); Serial.print("  "); Serial.print(volts2); Serial.println("V");
-	Serial.print("AIN3: "); Serial.print(adc3); Serial.print("  "); Serial.print(volts3); Serial.println("V");
+	Serial.println( "-----------------------------------------------------------" );
+	Serial.printf( "AIN0: %u, %.2fV\n", adc0, volts0 );
+	Serial.print( "AIN1: " );
+	Serial.print( adc1 );
+	Serial.print( "  " );
+	Serial.print( volts1 );
+	Serial.println( "V" );
+	Serial.print( "AIN2: " );
+	Serial.print( adc2 );
+	Serial.print( "  " );
+	Serial.print( volts2 );
+	Serial.println( "V" );
+	Serial.print( "AIN3: " );
+	Serial.print( adc3 );
+	Serial.print( "  " );
+	Serial.print( volts3 );
+	Serial.println( "V" );
 
 	M5.update();
 	if( M5.Btn.wasPressed() )
