@@ -7,7 +7,6 @@ Servo angle range 0 ~ 180
 DC motor speed range -127~127
 ATOM LITE HY2.0-4P:
   G, 5V, G26, G32
-ADS1115 address 0x48
 SHT40 default address: 0x44
 APDS-9960 default address: 0x39
 */
@@ -41,19 +40,29 @@ Pausing for 5 seconds.
 
 #include <M5Atom.h>
 #include "AtomMotion.h"
-#include <Adafruit_ADS1X15.h>
 
 
 #define PORT_B 23
 #define PORT_C 22
+#define RED 0xFF0000
+#define ORANGE 0xFF8000
+#define YELLOW 0xFFFF00
+#define GREEN 0x00FF00
+#define BLUE 0x0000FF
+#define INDIGO 0x4B0082
+#define VIOLET 0xEE82EE
+#define BLACK 0x000000
+#define MAGENTA 0xFF00FF
+#define CYAN 0x00FFFF
+#define WHITE 0xFFFFFF
 
 
 AtomMotion Atom;
-Adafruit_ADS1115 ads;
 xSemaphoreHandle CtlSemaphore;
 bool direction = true;
+unsigned long lastLoop = 0;
 unsigned int speed = 180;
-unsigned int FSM = 0;
+unsigned int buttonCount = 0;
 const byte sdaGPIO = 26; // Use this to set the SDA GPIO if your board uses a non-standard GPIOs for the I2C bus.
 const byte sclGPIO = 32; // Use this to set the SCL GPIO if your board uses a non-standard GPIOs for the I2C bus.
 
@@ -83,13 +92,13 @@ void TaskMotion( void *pvParameters )
 		{
 			Atom.SetMotorSpeed( 1, 100 );
 			Atom.SetMotorSpeed( 2, 100 );
-			M5.dis.drawpix( 0, 0xff0000 );
+			M5.dis.drawpix( 0, RED );
 		}
 		else
 		{
 			Atom.SetMotorSpeed( 1, -100 );
 			Atom.SetMotorSpeed( 2, -100 );
-			M5.dis.drawpix( 0, 0x0000ff );
+			M5.dis.drawpix( 0, BLUE );
 		}
 	}
 }
@@ -110,49 +119,18 @@ void setup()
 		 0 );				// Values 0 or 1 indicate the index number of the CPU which the task should be pinned to.
 	pinMode( PORT_B, INPUT_PULLUP );
 	pinMode( PORT_C, INPUT_PULLUP );
-	M5.dis.drawpix( 0, 0xffffff ); // White
+	M5.dis.drawpix( 0, WHITE );
 
 	Wire.begin( sdaGPIO, sclGPIO );
-
-	if( !ads.begin() )
-	{
-		Serial.println( "Failed to initialize ADS." );
-		while( 1 )
-			delay( 10 );
-	}
 }
 
 
 void loop()
 {
-	int16_t adc0 = ads.readADC_SingleEnded( 0 );
-	int16_t adc1 = ads.readADC_SingleEnded( 1 );
-	int16_t adc2 = ads.readADC_SingleEnded( 2 );
-	int16_t adc3 = ads.readADC_SingleEnded( 3 );
-	float volts0 = ads.computeVolts( adc0 );
-	float volts1 = ads.computeVolts( adc1 );
-	float volts2 = ads.computeVolts( adc2 );
-	float volts3 = ads.computeVolts( adc3 );
-
-	Serial.println( "-----------------------------------------------------------" );
-	Serial.printf( "AIN0: %u, %.2fV\n", adc0, volts0 );
-	Serial.print( "AIN1: " );
-	Serial.print( adc1 );
-	Serial.print( "  " );
-	Serial.print( volts1 );
-	Serial.println( "V" );
-	Serial.print( "AIN2: " );
-	Serial.print( adc2 );
-	Serial.print( "  " );
-	Serial.print( volts2 );
-	Serial.println( "V" );
-	Serial.print( "AIN3: " );
-	Serial.print( adc3 );
-	Serial.print( "  " );
-	Serial.print( volts3 );
-	Serial.println( "V" );
-
 	M5.update();
+
+  if (millis() - lastLoop >= 50)
+  {
 	if( M5.Btn.wasPressed() )
 	{
 		direction = !direction;
@@ -161,26 +139,35 @@ void loop()
 		else
 			speed = 180;
 		Serial.printf( "New speed: %d\n", speed );
-		switch( FSM )
+		switch( buttonCount )
 		{
 			case 0:
-				M5.dis.drawpix( 0, 0xfff000 ); // YELLOW 黄色
+				M5.dis.drawpix( 0, RED );
 				break;
 			case 1:
-				M5.dis.drawpix( 0, 0xff0000 ); // RED  红色
+				M5.dis.drawpix( 0, ORANGE );
 				break;
 			case 2:
-				M5.dis.drawpix( 0, 0x0000ff ); // BLUE  蓝色
+				M5.dis.drawpix( 0, YELLOW );
 				break;
 			case 3:
-				M5.dis.drawpix( 0, 0x00ff00 ); // GREEN  绿色
+				M5.dis.drawpix( 0, GREEN );
+				break;
+			case 4:
+				M5.dis.drawpix( 0, BLUE );
+				break;
+			case 5:
+				M5.dis.drawpix( 0, INDIGO );
+				break;
+			case 6:
+				M5.dis.drawpix( 0, VIOLET );
 				break;
 			default:
 				break;
 		}
-		FSM++;
-		if( FSM >= 4 )
-			FSM = 0;
+		buttonCount++;
+		if( buttonCount >= 7 )
+			buttonCount = 0;
 	}
 	if( !digitalRead( PORT_B ) )
 	{
@@ -196,5 +183,6 @@ void loop()
 	}
 	else
 		Atom.SetServoAngle( 2, speed );
-	delay( 100 );
+    lastLoop = millis();
+  }
 }
