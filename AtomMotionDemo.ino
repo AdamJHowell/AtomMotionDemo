@@ -43,19 +43,19 @@ Pausing for 5 seconds.
 #include "AtomMotion.h"
 
 
-#define PORT_B 23
-#define PORT_C 22
-#define RED 0xFF0000
-#define ORANGE 0xFF8000
-#define YELLOW 0xFFFF00
-#define GREEN 0x00FF00
-#define BLUE 0x0000FF
-#define INDIGO 0x4B0082
-#define VIOLET 0xEE82EE
-#define BLACK 0x000000
+#define PORT_B	 23
+#define PORT_C	 22
+#define RED		 0xFF0000
+#define ORANGE	 0xFF8000
+#define YELLOW	 0xFFFF00
+#define GREEN	 0x00FF00
+#define BLUE	 0x0000FF
+#define INDIGO	 0x4B0082
+#define VIOLET	 0xEE82EE
+#define BLACK	 0x000000
 #define MAGENTA 0xFF00FF
-#define CYAN 0x00FFFF
-#define WHITE 0xFFFFFF
+#define CYAN	 0x00FFFF
+#define WHITE	 0xFFFFFF
 
 
 AtomMotion Atom;
@@ -130,60 +130,60 @@ void loop()
 {
 	M5.update();
 
-  if (millis() - lastLoop >= 50)
-  {
-	if( M5.Btn.wasPressed() )
+	if( millis() - lastLoop >= 50 )
 	{
-		direction = !direction;
-		if( speed == 180 )
-			speed = 0;
-		else
-			speed = 180;
-		Serial.printf( "New speed: %d\n", speed );
-		switch( buttonCount )
+		if( M5.Btn.wasPressed() )
 		{
-			case 0:
-				M5.dis.drawpix( 0, RED );
-				break;
-			case 1:
-				M5.dis.drawpix( 0, ORANGE );
-				break;
-			case 2:
-				M5.dis.drawpix( 0, YELLOW );
-				break;
-			case 3:
-				M5.dis.drawpix( 0, GREEN );
-				break;
-			case 4:
-				M5.dis.drawpix( 0, BLUE );
-				break;
-			case 5:
-				M5.dis.drawpix( 0, INDIGO );
-				break;
-			case 6:
-				M5.dis.drawpix( 0, VIOLET );
-				break;
-			default:
-				break;
+			direction = !direction;
+			if( speed == 180 )
+				speed = 0;
+			else
+				speed = 180;
+			Serial.printf( "New speed: %d\n", speed );
+			switch( buttonCount )
+			{
+				case 0:
+					M5.dis.drawpix( 0, RED );
+					break;
+				case 1:
+					M5.dis.drawpix( 0, ORANGE );
+					break;
+				case 2:
+					M5.dis.drawpix( 0, YELLOW );
+					break;
+				case 3:
+					M5.dis.drawpix( 0, GREEN );
+					break;
+				case 4:
+					M5.dis.drawpix( 0, BLUE );
+					break;
+				case 5:
+					M5.dis.drawpix( 0, INDIGO );
+					break;
+				case 6:
+					M5.dis.drawpix( 0, VIOLET );
+					break;
+				default:
+					break;
+			}
+			buttonCount++;
+			if( buttonCount >= 7 )
+				buttonCount = 0;
 		}
-		buttonCount++;
-		if( buttonCount >= 7 )
-			buttonCount = 0;
+		if( !digitalRead( PORT_B ) )
+		{
+			Atom.SetServoAngle( 4, 90 );
+			Serial.printf( "Hit limit B!\n" );
+		}
+		else
+			Atom.SetServoAngle( 4, speed );
+		if( !digitalRead( PORT_C ) )
+		{
+			Atom.SetServoAngle( 2, 90 );
+			Serial.printf( "Hit limit C!\n" );
+		}
+		else
+			Atom.SetServoAngle( 2, speed );
+		lastLoop = millis();
 	}
-	if( !digitalRead( PORT_B ) )
-	{
-		Atom.SetServoAngle( 4, 90 );
-		Serial.printf( "Hit limit B!\n" );
-	}
-	else
-		Atom.SetServoAngle( 4, speed );
-	if( !digitalRead( PORT_C ) )
-	{
-		Atom.SetServoAngle( 2, 90 );
-		Serial.printf( "Hit limit C!\n" );
-	}
-	else
-		Atom.SetServoAngle( 2, speed );
-    lastLoop = millis();
-  }
 }
