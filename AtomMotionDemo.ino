@@ -39,7 +39,9 @@ Pausing for 5 seconds.
  */
 
 
+#include <Wire.h>
 #include <M5Atom.h>
+#include <M5_DLight.h>
 #include "AtomMotion.h"
 
 
@@ -62,10 +64,16 @@ AtomMotion Atom;
 xSemaphoreHandle CtlSemaphore;
 bool direction = true;
 unsigned long lastLoop = 0;
+const unsigned long loopDelay = 10; // The maximum value of 4,294,967,295 allows for a delay of about 49.7 days.
 unsigned int speed = 180;
 unsigned int buttonCount = 0;
-const byte sdaGPIO = 26; // Use this to set the SDA GPIO if your board uses a non-standard GPIOs for the I2C bus.
-const byte sclGPIO = 32; // Use this to set the SCL GPIO if your board uses a non-standard GPIOs for the I2C bus.
+const byte sdaGPIO = 26;			  // Use this to set the SDA GPIO if your board uses a non-standard GPIOs for the I2C bus.
+const byte sclGPIO = 32;			  // Use this to set the SCL GPIO if your board uses a non-standard GPIOs for the I2C bus.
+const int PCA_ADDRESS = 0x70;		  // The I2C address of the Pa.HUB.
+const unsigned int numSensors = 4; // The number of sensors.
+uint16_t luxArray[4];				  // An array to hold light values.
+M5_DLight sensorArray[4];			  // An array to hold sensors.
+unsigned int sensorAddresses[4];	  // An array of sensor port numbers {0, 1, 4, 5};
 
 
 void GetStatus()
@@ -123,6 +131,17 @@ void setup()
 	M5.dis.drawpix( 0, WHITE );
 
 	Wire.begin( sdaGPIO, sclGPIO );
+	sensorAddresses[0] = 0;
+	sensorAddresses[1] = 1;
+	sensorAddresses[2] = 4;
+	sensorAddresses[3] = 5;
+	for( uint8_t i = 0; i < numSensors; i++ )
+	{
+		pcaSelect( sensorAddresses[i] );
+		sensorArray[i].begin();
+		sensorArray[i].setMode( CONTINUOUSLY_H_RESOLUTION_MODE );
+	}
+	Serial.println( "\nI2C scanner and lux sensor are ready!" );
 }
 
 
@@ -130,7 +149,7 @@ void loop()
 {
 	M5.update();
 
-	if( millis() - lastLoop >= 50 )
+	if( millis() - lastLoop >= loopDelay )
 	{
 		if( M5.Btn.wasPressed() )
 		{
@@ -185,5 +204,14 @@ void loop()
 		else
 			Atom.SetServoAngle( 2, speed );
 		lastLoop = millis();
+
+		// Read all sensors before acting on the values.
+		for( uint8_t i = 0; i < numSensors; i++ )
+		{
+			pcaSelect( sensorAddresses[i] );
+			luxArray[i] = sensorArray[i].getLUX();
+		}
+		// Print values in a format the Arduino Serial Plotter can use.
+		Serial.printf( "L0:%d L1:%d L4:%d L5:%d\n", luxArray[0], luxArray[1], luxArray[2], luxArray[3] );
 	}
 }
