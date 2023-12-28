@@ -1,12 +1,13 @@
 /*
-scl 21
-sda 25
-PORT.B, 23 white, 33 yellow
-PORT.C, 19 yellow, 22 white
+ATOM Motion:
+    SCL 21
+    SDA 25
+    PORT.B (black connector), 23 white, 33 yellow
+    PORT.C (blue connector), 19 yellow, 22 white
 Servo angle range 0 ~ 180
 DC motor speed range -127~127
-ATOM LITE HY2.0-4P:
-  G, 5V, G26, G32
+ATOM Lite HY2.0-4P:
+    G, 5V, G26, G32
 SHT40 default address: 0x44
 APDS-9960 default address: 0x39
 */
