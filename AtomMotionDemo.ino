@@ -76,6 +76,16 @@ M5_DLight sensorArray[4];			  // An array to hold sensors.
 unsigned int sensorAddresses[4];	  // An array of sensor port numbers {0, 1, 4, 5};
 
 
+void pcaSelect( uint8_t i )
+{
+	if( i > 7 )
+		return;
+	Wire.beginTransmission( PCA_ADDRESS );
+	Wire.write( 1 << i );
+	Wire.endTransmission();
+}
+
+
 void GetStatus()
 {
 	for( int ch = 1; ch < 5; ch++ )
