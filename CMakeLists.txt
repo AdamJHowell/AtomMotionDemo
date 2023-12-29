@@ -9,6 +9,10 @@ include_directories( .
 		C:/Code/Arduino/libraries/Servo/src/
 		"C:/Program Files (x86)/Arduino/hardware/arduino/avr/cores/arduino/"
 		"C:/Program Files (x86)/Arduino/hardware/tools/avr/lib/gcc/avr/7.3.0/include/"
+		"C:/Users/Adam Howell/AppData/Local/Arduino15/packages/esp32/hardware/esp32/2.0.14/cores/esp32/"
+		"C:/Users/Adam Howell/AppData/Local/Arduino15/packages/esp32/hardware/esp32/2.0.14/libraries/Wire/src/"
+		"C:/Code/Arduino/libraries/M5-DLight/src/"
+		"C:/Code/Arduino/libraries/M5Atom/src/"
 )
 
 add_executable( AtomMotionDemo

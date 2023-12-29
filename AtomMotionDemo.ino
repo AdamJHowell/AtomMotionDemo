@@ -49,16 +49,16 @@ void pcaSelect( uint8_t i )
 	Wire.beginTransmission( PCA_ADDRESS );
 	Wire.write( 1 << i );
 	Wire.endTransmission();
-}
+} // End of pcaSelect()
 
 
 void GetStatus()
 {
 	for( int ch = 1; ch < 5; ch++ )
-		Serial.printf( "Servo Channel %d: %d \n", ch, Atom.ReadServoAngle( ch ) );
-	Serial.printf( "Motor Channel %d: %d \n", 1, Atom.ReadMotorSpeed( 1 ) );
-	Serial.printf( "Motor Channel %d: %d \n", 2, Atom.ReadMotorSpeed( 2 ) );
-}
+		Serial.printf( "Servo Channel %d: %d \n", ch, atomMotion.ReadServoAngle( ch ) );
+	Serial.printf( "Motor Channel %d: %d \n", 1, atomMotion.ReadMotorSpeed( 1 ) );
+	Serial.printf( "Motor Channel %d: %d \n", 2, atomMotion.ReadMotorSpeed( 2 ) );
+} // End of GetStatus()
 
 
 void TaskMotion( void *pvParameters )
@@ -66,33 +66,33 @@ void TaskMotion( void *pvParameters )
 	while( 1 )
 	{
 		for( int ch = 1; ch < 5; ch++ )
-			Atom.SetServoAngle( ch, 180 );
+			atomMotion.SetServoAngle( ch, 180 );
 		GetStatus();
 		vTaskDelay( 1000 / portTICK_RATE_MS );
 		for( int ch = 1; ch < 5; ch++ )
-			Atom.SetServoAngle( ch, 0 );
+			atomMotion.SetServoAngle( ch, 0 );
 		GetStatus();
 		vTaskDelay( 1000 / portTICK_RATE_MS );
 		if( direction )
 		{
-			Atom.SetMotorSpeed( 1, 100 );
-			Atom.SetMotorSpeed( 2, 100 );
+			atomMotion.SetMotorSpeed( 1, 100 );
+			atomMotion.SetMotorSpeed( 2, 100 );
 			M5.dis.drawpix( 0, RED );
 		}
 		else
 		{
-			Atom.SetMotorSpeed( 1, -100 );
-			Atom.SetMotorSpeed( 2, -100 );
+			atomMotion.SetMotorSpeed( 1, -100 );
+			atomMotion.SetMotorSpeed( 2, -100 );
 			M5.dis.drawpix( 0, BLUE );
 		}
 	}
-}
+} // End of TaskMotion()
 
 
 void setup()
 {
 	M5.begin( true, false, true );
-	Atom.Init();
+	atomMotion.Init();
 	vSemaphoreCreateBinary( CtlSemaphore );
 	xTaskCreatePinnedToCore(
 		 TaskMotion,	// Pointer to the task entry function.
@@ -107,10 +107,6 @@ void setup()
 	M5.dis.drawpix( 0, WHITE );
 
 	Wire.begin( sdaGPIO, sclGPIO );
-	sensorAddresses[0] = 0;
-	sensorAddresses[1] = 1;
-	sensorAddresses[2] = 4;
-	sensorAddresses[3] = 5;
 	for( uint8_t i = 0; i < NUM_SENSORS; i++ )
 	{
 		pcaSelect( sensorAddresses[i] );
@@ -118,12 +114,12 @@ void setup()
 		sensorArray[i].setMode( CONTINUOUSLY_H_RESOLUTION_MODE );
 	}
 	Serial.println( "\nI2C scanner and lux sensor are ready!" );
-}
+} // End of setup()
 
 
 void loop()
 {
-	M5.update();
+   M5.update();
 
 	if( millis() - lastLoop >= loopDelay )
 	{
@@ -167,27 +163,27 @@ void loop()
 		}
 		if( !digitalRead( PORT_B ) )
 		{
-			Atom.SetServoAngle( 4, 90 );
+			atomMotion.SetServoAngle( 4, 90 );
 			Serial.printf( "Hit limit B!\n" );
 		}
 		else
-			Atom.SetServoAngle( 4, speed );
+			atomMotion.SetServoAngle( 4, speed );
 		if( !digitalRead( PORT_C ) )
 		{
-			Atom.SetServoAngle( 2, 90 );
+			atomMotion.SetServoAngle( 2, 90 );
 			Serial.printf( "Hit limit C!\n" );
 		}
 		else
-			Atom.SetServoAngle( 2, speed );
+			atomMotion.SetServoAngle( 2, speed );
 		lastLoop = millis();
 
 		// Read all sensors before acting on the values.
-		for( uint8_t i = 0; i < numSensors; i++ )
+		for( uint8_t i = 0; i < NUM_SENSORS; i++ )
 		{
 			pcaSelect( sensorAddresses[i] );
-			luxArray[i] = sensorArray[i].getLUX();
+			luxValues[i] = sensorArray[i].getLUX();
 		}
 		// Print values in a format the Arduino Serial Plotter can use.
-		Serial.printf( "L0:%d L1:%d L4:%d L5:%d\n", luxArray[0], luxArray[1], luxArray[2], luxArray[3] );
+		Serial.printf( "L0:%d L1:%d L4:%d L5:%d\n", luxValues[0], luxValues[1], luxValues[2], luxValues[3] );
 	}
-}
+} // End of loop()
