@@ -12,8 +12,10 @@ include_directories( .
 )
 
 add_executable( AtomMotionDemo
+		AtomMotionDemo.h
 		AtomMotionDemo.ino
 		AtomMotion.h
+		AtomMotion.cpp
 )
 
 set_target_properties( AtomMotionDemo PROPERTIES LINKER_LANGUAGE CXX )
