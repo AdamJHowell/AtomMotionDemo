@@ -111,7 +111,7 @@ void setup()
 	sensorAddresses[1] = 1;
 	sensorAddresses[2] = 4;
 	sensorAddresses[3] = 5;
-	for( uint8_t i = 0; i < numSensors; i++ )
+	for( uint8_t i = 0; i < NUM_SENSORS; i++ )
 	{
 		pcaSelect( sensorAddresses[i] );
 		sensorArray[i].begin();

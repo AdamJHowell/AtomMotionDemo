@@ -24,6 +24,7 @@
 #define MAGENTA 0xFF00FF
 #define CYAN	 0x00FFFF
 #define WHITE	 0xFFFFFF
+#define NUM_SENSORS 4 // The number of sensors.
 
 
 AtomMotion Atom;
@@ -32,14 +33,13 @@ bool direction = true;
 unsigned int speed = 180;
 unsigned int buttonCount = 0;
 unsigned long lastLoop = 0;
-const unsigned int numSensors = 4; // The number of sensors.
 const unsigned long loopDelay = 10; // The maximum value of 4,294,967,295 allows for a delay of about 49.7 days.
 const byte sdaGPIO = 26;			  // Use this to set the SDA GPIO if your board uses a non-standard GPIOs for the I2C bus.
 const byte sclGPIO = 32;			  // Use this to set the SCL GPIO if your board uses a non-standard GPIOs for the I2C bus.
 const int PCA_ADDRESS = 0x70;		  // The I2C address of the Pa.HUB.
-uint16_t luxArray[4];				  // An array to hold light values.
-M5_DLight sensorArray[4];			  // An array to hold sensors.
-unsigned int sensorAddresses[4];	  // An array of sensor port numbers {0, 1, 4, 5};
+uint16_t luxArray[NUM_SENSORS];				  // An array to hold light values.
+M5_DLight sensorArray[NUM_SENSORS];			  // An array to hold sensors.
+unsigned int sensorAddresses[NUM_SENSORS];	  // An array of sensor port numbers {0, 1, 4, 5};
 
 
 void pcaSelect( uint8_t i );
