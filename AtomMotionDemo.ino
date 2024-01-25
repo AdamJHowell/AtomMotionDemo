@@ -67,11 +67,11 @@ void TaskMotion( void *pvParameters )
 	{
 		for( int ch = 1; ch < 5; ch++ )
 			atomMotion.SetServoAngle( ch, 180 );
-		GetStatus();
+		GetStatus();    // Print motor and servo status to the terminal.
 		vTaskDelay( 1000 / portTICK_RATE_MS );
 		for( int ch = 1; ch < 5; ch++ )
 			atomMotion.SetServoAngle( ch, 0 );
-		GetStatus();
+		GetStatus();    // Print motor and servo status to the terminal.
 		vTaskDelay( 1000 / portTICK_RATE_MS );
 		if( direction )
 		{
@@ -93,15 +93,15 @@ void setup()
 {
 	M5.begin( true, false, true );
 	atomMotion.Init();
-	vSemaphoreCreateBinary( CtlSemaphore );
+	vSemaphoreCreateBinary( CtlSemaphore );   // ToDo: This method is deprecated and should be replaced with xSemaphoreCreateBinary().
 	xTaskCreatePinnedToCore(
-		 TaskMotion,	// Pointer to the task entry function.
-		 "TaskMotion", // A descriptive name for the task.
-		 4096,			// The size of the task stack specified as the number of bytes.
-		 NULL,			// Pointer that will be used as the parameter for the task being created.
-		 2,				// Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-		 NULL,			// Used to pass back a handle by which the created task can be referenced.
-		 0 );				// Values 0 or 1 indicate the index number of the CPU which the task should be pinned to.
+		TaskMotion,	// Pointer to the task entry function.
+		"TaskMotion", // A descriptive name for the task.
+		4096,			// The size of the task stack specified as the number of bytes.
+		NULL,			// Pointer that will be used as the parameter for the task being created.
+		2,				// Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+		NULL,			// Used to pass back a handle by which the created task can be referenced.
+		0 );				// Values 0 or 1 indicate the index number of the CPU which the task should be pinned to.
 	pinMode( PORT_B, INPUT_PULLUP );
 	pinMode( PORT_C, INPUT_PULLUP );
 	M5.dis.drawpix( 0, WHITE );
